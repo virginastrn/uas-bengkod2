@@ -7,7 +7,7 @@ import numpy as np
 # Konfigurasi Halaman
 st.set_page_config(page_title="Prediksi Churn Pelanggan", page_icon="📊")
 
-# 1. Jalur Absolut
+# 1. Jalur Absolut (Wajib agar tidak error FileNotFoundError di server)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(BASE_DIR, 'churn_model.pkl')
 scaler_path = os.path.join(BASE_DIR, 'scaler.pkl')
@@ -25,7 +25,7 @@ st.title('📊 Prediksi Churn Pelanggan')
 st.markdown('Aplikasi ini memprediksi apakah pelanggan akan churn (berhenti) atau tetap berlangganan menggunakan Machine Learning.')
 st.divider()
 
-# 3. Form Input dengan Layout 2 Kolom
+# 3. Form Input dengan Layout 2 Kolom agar rapi
 col1, col2 = st.columns(2)
 
 with col1:
@@ -50,10 +50,10 @@ st.divider()
 # 4. Tombol Eksekusi
 if st.button('🚀 Prediksi Churn', use_container_width=True):
     
-    # Feature Engineering Otomatis
+    # Feature Engineering Otomatis (sesuai yang kita buat di Colab)
     spent_per_visit = total_spent / (total_visits + 1)
     
-    # Susun input menjadi array SESUAI URUTAN FITUR
+    # Susun input menjadi array SESUAI URUTAN FITUR saat di Colab
     input_data = np.array([[
         age, 
         gender_encoded, 
@@ -72,18 +72,15 @@ if st.button('🚀 Prediksi Churn', use_container_width=True):
     prediction = model.predict(input_scaled)
     probabilitas = model.predict_proba(input_scaled)[0]
     
-    # Menampilkan Hasil
+    # Menampilkan Hasil Utama
     st.markdown("### Hasil Prediksi:")
     if prediction[0] == 1:
         st.error('⚠️ **Peringatan!** Pelanggan ini berpotensi **CHURN**.')
     else:
         st.success('✅ **Aman!** Pelanggan ini kemungkinan akan **TETAP BERLANGGANAN**.')
 
-    # 5. Visualisasi Pendukung
-    st.markdown("#### Visualisasi Tingkat Keyakinan Model")
-    df_prob = pd.DataFrame({
-        'Status': ['Tetap Berlangganan', 'Potensi Churn'],
-        'Probabilitas (%)': [probabilitas[0] * 100, probabilitas[1] * 100]
-    })
-    
-    st.bar_chart(df_prob.set_index('Status'))
+    # 5. Persentase Keyakinan Model (Tanpa Grafik)
+    st.markdown("#### Persentase Keyakinan Model:")
+    col_a, col_b = st.columns(2)
+    col_a.metric("Tetap Berlangganan", f"{probabilitas[0] * 100:.2f}%")
+    col_b.metric("Potensi Churn", f"{probabilitas[1] * 100:.2f}%")
