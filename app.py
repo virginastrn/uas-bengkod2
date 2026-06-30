@@ -7,7 +7,7 @@ import numpy as np
 # Konfigurasi Halaman
 st.set_page_config(page_title="Prediksi Churn Pelanggan", page_icon="📊")
 
-# 1. Jalur Absolut (Wajib agar tidak error FileNotFoundError di server)
+# 1. Jalur Absolut
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(BASE_DIR, 'churn_model.pkl')
 scaler_path = os.path.join(BASE_DIR, 'scaler.pkl')
@@ -53,7 +53,7 @@ if st.button('🚀 Prediksi Churn', use_container_width=True):
     # Feature Engineering Otomatis (sesuai yang kita buat di Colab)
     spent_per_visit = total_spent / (total_visits + 1)
     
-    # Susun input menjadi array SESUAI URUTAN FITUR saat di Colab
+    # Susun input menjadi array SESUAI URUTAN FITUR
     input_data = np.array([[
         age, 
         gender_encoded, 
@@ -68,19 +68,27 @@ if st.button('🚀 Prediksi Churn', use_container_width=True):
     # Scale input data
     input_scaled = scaler.transform(input_data)
     
-    # Prediksi
+    # Prediksi standar bawaan model
     prediction = model.predict(input_scaled)
     probabilitas = model.predict_proba(input_scaled)[0]
+    prob_churn = probabilitas[1] * 100  # Persentase Probabilitas Churn
     
-    # Menampilkan Hasil Utama
+    # Menampilkan Hasil (Tampilan persis, tapi isinya standar model)
     st.markdown("### Hasil Prediksi:")
+    
     if prediction[0] == 1:
-        st.error('⚠️ **Peringatan!** Pelanggan ini berpotensi **CHURN**.')
+        st.error(f"""
+        ⚠️
+        
+        **Pelanggan Berpotensi CHURN (Berhenti Berlangganan) dengan probabilitas {prob_churn:.2f}%**
+        
+        Probabilitas churn mentah dari model: {prob_churn:.2f}%
+        """)
     else:
-        st.success('✅ **Aman!** Pelanggan ini kemungkinan akan **TETAP BERLANGGANAN**.')
-
-    # 5. Persentase Keyakinan Model (Tanpa Grafik)
-    st.markdown("#### Persentase Keyakinan Model:")
-    col_a, col_b = st.columns(2)
-    col_a.metric("Tetap Berlangganan", f"{probabilitas[0] * 100:.2f}%")
-    col_b.metric("Potensi Churn", f"{probabilitas[1] * 100:.2f}%")
+        st.success(f"""
+        ✅
+        
+        **Pelanggan kemungkinan akan TETAP BERLANGGANAN**
+        
+        Probabilitas churn mentah dari model: {prob_churn:.2f}%
+        """)
